@@ -14,7 +14,7 @@ import numpy as np
 
 class Method_MLP(method, nn.Module):
     data = None
-    max_epoch = 200
+    max_epoch = 100
     learning_rate = 1e-3
     loss_history = []
 
@@ -22,25 +22,18 @@ class Method_MLP(method, nn.Module):
         method.__init__(self, mName, mDescription)
         nn.Module.__init__(self)
 
-        # ===== Bigger architecture: 784 -> 512 -> 256 -> 128 -> 10 =====
-        self.fc_layer_1 = nn.Linear(784, 512)
-        self.fc_layer_2 = nn.Linear(512, 256)
-        self.fc_layer_3 = nn.Linear(256, 128)
-        self.fc_layer_4 = nn.Linear(128, 10)
+        # ===== Model architecture: 784 -> 256 -> 128 -> 10 =====
+        self.fc_layer_1 = nn.Linear(784, 256)
+        self.fc_layer_2 = nn.Linear(256, 128)
+        self.fc_layer_3 = nn.Linear(128, 10)
 
         self.activation_func_1 = nn.ReLU()
         self.activation_func_2 = nn.ReLU()
-        self.activation_func_3 = nn.ReLU()
-
-        self.dropout = nn.Dropout(p=0.3)
 
     def forward(self, x):
         h = self.activation_func_1(self.fc_layer_1(x))
-        h = self.dropout(h)
         h = self.activation_func_2(self.fc_layer_2(h))
-        h = self.dropout(h)
-        h = self.activation_func_3(self.fc_layer_3(h))
-        y_pred = self.fc_layer_4(h)  # logits (NO softmax)
+        y_pred = self.fc_layer_3(h)
         return y_pred
 
     def train_model(self, X, y):
@@ -54,7 +47,7 @@ class Method_MLP(method, nn.Module):
         self.loss_history = []
 
         for epoch in range(self.max_epoch):
-            self.train()  # set to training mode
+            self.train()
             y_pred = self.forward(X_tensor)
             train_loss = loss_function(y_pred, y_tensor)
 
@@ -75,7 +68,7 @@ class Method_MLP(method, nn.Module):
                       'Loss:', round(train_loss.item(), 4))
 
     def test(self, X):
-        self.eval()  # disable dropout during testing
+        self.eval()
         with torch.no_grad():
             X_tensor = torch.FloatTensor(np.array(X)) / 255.0
             y_pred = self.forward(X_tensor)
